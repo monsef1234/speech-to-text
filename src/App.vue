@@ -157,6 +157,15 @@ export default defineComponent({
   methods: {
     async startSpeaking() {
       try {
+        if (
+          !("webkitSpeechRecognition" in window) &&
+          !("SpeechRecognition" in window)
+        ) {
+          throw new Error(
+            "Speech recognition is not supported in this browser"
+          );
+        }
+
         if (this.error?.error == "not-allowed") {
           throw new Error(
             "Microphone access is not allowed, please allow it in your browser and refresh the page"
@@ -226,6 +235,9 @@ export default defineComponent({
     copyText() {
       navigator.clipboard.writeText(this.text);
       this.copied = true;
+      setTimeout(() => {
+        this.copied = false;
+      }, 2000);
     },
   },
 
@@ -238,6 +250,13 @@ export default defineComponent({
   mounted() {
     this.initTypewriter();
     this.setupSpeechHandlers();
+  },
+
+  beforeUnmount() {
+    if (this.isListening) {
+      this.stopSpeaking();
+    }
+    this.typewriter = null;
   },
 });
 </script>
