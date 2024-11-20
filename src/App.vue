@@ -118,7 +118,7 @@ export default defineComponent({
       stop,
       result,
       isSupported,
-      recognition,
+      recognition: recognition as SpeechRecognition,
       animationData,
       error,
     };
@@ -144,10 +144,10 @@ export default defineComponent({
         code: "en-US",
       } as Language,
 
-      textArray: [] as String[],
-      text: "" as String,
+      textArray: [] as string[],
+      text: "" as string,
       typewriter: null as Typewriter | null,
-      typedText: "" as String,
+      typedText: "" as string,
       copied: false as boolean,
     };
   },
@@ -162,8 +162,10 @@ export default defineComponent({
         }
 
         await this.start();
-      } catch (err) {
-        toast(err.message || "Something went wrong", {
+      } catch (err: unknown) {
+        const errMessage =
+          err instanceof Error ? err.message : "Something went wrong";
+        toast(errMessage || "Something went wrong", {
           position: "bottom-center",
           type: "error",
           theme: "dark",
