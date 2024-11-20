@@ -107,17 +107,15 @@ export default defineComponent({
   name: "App",
 
   setup() {
-    const { start, stop, result, recognition, isSupported, error } =
-      useSpeechRecognition({
-        continuous: true,
-        interimResults: true,
-      });
+    const { start, stop, result, recognition, error } = useSpeechRecognition({
+      continuous: true,
+      interimResults: true,
+    });
 
     return {
       start,
       stop,
       result,
-      isSupported,
       recognition: recognition as SpeechRecognition,
       animationData,
       error,
@@ -174,6 +172,7 @@ export default defineComponent({
     },
 
     stopSpeaking() {
+      this.isListening = false;
       this.stop();
     },
 
@@ -186,13 +185,15 @@ export default defineComponent({
 
     setupSpeechHandlers() {
       this.recognition.onstart = () => {
-        console.log(this.recognition.lang);
-
         this.isListening = true;
       };
 
       this.recognition.onend = () => {
-        this.isListening = false;
+        if (this.isListening) {
+          this.start();
+        } else {
+          this.isListening = false;
+        }
       };
 
       this.recognition.onresult = (event: SpeechRecognitionEvent) => {
