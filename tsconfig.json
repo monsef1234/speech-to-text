@@ -1,8 +1,8 @@
 {
   "files": [],
-  "compilerOptions": [
-    "vue3-toastify/global"
-  ],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+  },
   "references": [
     {
       "path": "./tsconfig.app.json"

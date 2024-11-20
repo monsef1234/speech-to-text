@@ -1,24 +1,35 @@
 <template>
-  <div class="py-10">
+  <div class="h-screen flex flex-col justify-center items-center px-4">
     <div class="flex flex-col items-center">
-      <h1 class="text-3xl font-bold">Convert Speech to Text</h1>
-      <p class="text-lg text-gray-400 mt-4 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold">Convert Speech to Text</h1>
+      <p class="text-base text-gray-400 mt-4 text-center md:text-xl">
         Transform your spoken words into written text instantly. <br />
         Simply speak and watch your words appear on screen in real-time.
       </p>
+      <p class="text-base text-gray-400 text-center md:text-xl">
+        before try it, please visit the link below to see if your browser
+        supports the
+        <span class="font-bold underline">Speech Recognition API</span>
+      </p>
+      <a
+        class="text-base text-blue-500 underline text-center md:text-xl"
+        href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition#browser_compatibility"
+        target="_blank"
+        >Here</a
+      >
     </div>
+
     <div
-      class="bg-[var(--primary-color)] p-4 rounded-lg flex flex-col items-center flex-1 mt-10 min-w-[300px] max-w-[500px] w-full mx-auto"
+      class="bg-[var(--primary-color)] p-4 rounded-lg flex flex-col items-center mt-10 min-w-[300px] max-w-[500px] w-full mx-auto"
     >
       <div class="flex flex-col w-full">
         <h4 class="text-lg mt-4">1- First Choose Language</h4>
         <v-select
           class="select mt-4"
-          autocomplete="off"
           :filterable="false"
           :clearable="false"
           :options="options"
-          v-model="selected.label"
+          v-model="selected"
         />
         <h4 class="text-lg mt-4">2- Start Speaking</h4>
         <button
@@ -47,16 +58,45 @@
         </small>
       </div>
     </div>
+
+    <div
+      v-show="text"
+      class="bg-[var(--primary-color)] p-4 rounded-lg flex flex-col mt-10 min-w-[300px] max-w-[500px] w-full mx-auto"
+    >
+      <p
+        class=""
+        id="typewriter"
+        :dir="selected.code == 'ar-SA' ? 'rtl' : 'ltr'"
+      ></p>
+      <button
+        class="bg-[var(--secondary-color)] p-2 rounded-lg mt-4 w-fit mx-auto flex items-center gap-2"
+        :class="copied ? 'bg-transparent' : ''"
+        @click="copyText"
+      >
+        <svg
+          v-if="copied"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          class="w-[40px] fill-green-500"
+        >
+          <title>check</title>
+          <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
+        </svg>
+        <span v-else>Copy</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useSpeechRecognition } from "@vueuse/core";
-import Vue3Lottie from "vue3-lottie";
+import { toast } from "vue3-toastify";
+import Typewriter from "typewriter-effect/dist/core";
+
 import animationData from "./assets/Animation - 1731920772748.json";
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+
+import "vue3-toastify/dist/index.css";
 
 interface Language {
   label: "English" | "Arabic";
@@ -65,10 +105,6 @@ interface Language {
 
 export default defineComponent({
   name: "App",
-
-  components: {
-    Vue3Lottie,
-  },
 
   setup() {
     const { start, stop, result, recognition, isSupported, error } =
@@ -107,16 +143,19 @@ export default defineComponent({
         label: "English",
         code: "en-US",
       } as Language,
+
+      textArray: [] as String[],
+      text: "" as String,
+      typewriter: null as Typewriter | null,
+      typedText: "" as String,
+      copied: false as boolean,
     };
   },
 
   methods: {
     async startSpeaking() {
       try {
-        if (
-          this.error?.error == "not-allowed" ||
-          typeof this.error == "undefined"
-        ) {
+        if (this.error?.error == "not-allowed") {
           throw new Error(
             "Microphone access is not allowed, please allow it in your browser and refresh the page"
           );
@@ -135,6 +174,52 @@ export default defineComponent({
     stopSpeaking() {
       this.stop();
     },
+
+    initTypewriter() {
+      this.typewriter = new Typewriter("#typewriter", {
+        delay: 50,
+        cursor: "|",
+      });
+    },
+
+    setupSpeechHandlers() {
+      this.recognition.onstart = () => {
+        console.log(this.recognition.lang);
+
+        this.isListening = true;
+      };
+
+      this.recognition.onend = () => {
+        this.isListening = false;
+      };
+
+      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const results = event.results;
+
+        if (results[results.length - 1].isFinal) {
+          this.text += results[results.length - 1][0].transcript;
+          this.typedText = results[results.length - 1][0].transcript;
+          this.typewriter?.typeString(this.typedText + " ").start();
+          this.handleStopCommand(this.typedText);
+        }
+      };
+    },
+
+    handleStopCommand(text: string) {
+      const stopCommands = {
+        English: "stop recording",
+        Arabic: "توقف عن التسجيل",
+      };
+
+      if (text.toLowerCase().includes(stopCommands[this.selected.label])) {
+        this.stopSpeaking();
+      }
+    },
+
+    copyText() {
+      navigator.clipboard.writeText(this.text);
+      this.copied = true;
+    },
   },
 
   watch: {
@@ -144,13 +229,8 @@ export default defineComponent({
   },
 
   mounted() {
-    this.recognition.onstart = () => {
-      this.isListening = true;
-    };
-
-    this.recognition.onend = () => {
-      this.isListening = false;
-    };
+    this.initTypewriter();
+    this.setupSpeechHandlers();
   },
 });
 </script>

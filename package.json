@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/dom-speech-recognition": "^0.0.4",
     "@vueuse/core": "^11.2.0",
+    "typewriter-effect": "^2.21.0",
     "vue": "^3.5.12",
     "vue-select": "^4.0.0-beta.6",
     "vue3-lottie": "^3.3.1",
