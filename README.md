@@ -13,13 +13,13 @@ A web application that converts speech to text using the Web Speech API. Built w
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/speech-to-text-converter.git
+git clone https://github.com/your-username/speech-to-text.git
 ```
 
 2. Navigate to the project directory:
 
 ```bash
-cd speech-to-text-converter
+cd speech-to-text
 ```
 
 3. Install dependencies:
