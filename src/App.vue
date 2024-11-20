@@ -17,6 +17,10 @@
         target="_blank"
         >Here</a
       >
+      <p class="text-base text-gray-400 text-center md:text-xl">
+        maybe in mobile devices it will not work better you will be facing some
+        issues because of speech recognition API
+      </p>
     </div>
 
     <div
